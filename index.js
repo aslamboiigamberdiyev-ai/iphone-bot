@@ -1,4 +1,5 @@
 const TelegramBot = require('node-telegram-bot-api');
+const path = require('path');
 const { BOT_TOKEN, SHOP_NAME } = require('./config');
 const { iphones } = require('./data/iphones');
 const keyboards = require('./keyboards');
@@ -18,10 +19,9 @@ bot.onText(/\/start/, (msg) => {
 🏪 **${SHOP_NAME}**'ga xush kelibsiz!
 
 📱 Bizda **barcha turdagi iPhone** modellari mavjud:
-• iPhone 15 Pro Max 🔥
-• iPhone 15 Pro ⚡
-• iPhone 15 Plus 💙
-• iPhone 15 🌸
+• iPhone 17 Pro Max 🔥
+• iPhone 16 Pro ⚡
+• iPhone 15 Pro 💙
 • Va boshqalar...
 
 💰 **Eng yaxshi narxlar!**
@@ -70,45 +70,62 @@ ${phone.emoji} **${phone.name}** (${phone.year})
 
 📸 **Kamera:** ${phone.camera}
 💾 **Xotira:** ${phone.storage}
-🔋 **Batareya:** ${phone.battery}
-⚙️ **Chip:** ${phone.chip}
 
 💰 **Narxi:** ${phone.price.toLocaleString()} so'm
 
 ✨ ${phone.description}
             `;
 
-            bot.sendPhoto(chatId, phone.image, {
+            // Mahalliy fayl manzili
+            const imagePath = path.join(__dirname, phone.image);
+
+            bot.sendPhoto(chatId, imagePath, {
                 caption: caption,
                 parse_mode: 'Markdown',
                 ...keyboards.iphoneKeyboard(phone.id)
+            }).catch(err => {
+                console.log(`❌ ${phone.name} rasmi yuborilmadi:`, err.message);
+                // Rasm ishlamasa, faqat matn yuborish
+                bot.sendMessage(chatId, caption, {
+                    parse_mode: 'Markdown',
+                    ...keyboards.iphoneKeyboard(phone.id)
+                });
             });
-        }, index * 500); // Har biridan keyin 0.5 sekund kutish
+        }, index * 2000); // 2 sekund har bir rasm orasida
     });
 }
 
 // ===== YANGI IPHONE'LAR =====
 function showNewIphones(chatId) {
-    const newIphones = iphones.filter(p => p.year >= 2023);
+    const newIphones = iphones.filter(p => p.year >= 2024);
 
     bot.sendMessage(chatId, `🔥 **Yangi kelgan iPhone'lar:**`);
 
     newIphones.forEach((phone, index) => {
         setTimeout(() => {
             const caption = `
-${phone.emoji} **${phone.name}**
+${phone.emoji} **${phone.name}** (${phone.year})
 
 💰 **Narxi:** ${phone.price.toLocaleString()} so'm
+💾 **Xotira:** ${phone.storage}
 
 ✨ ${phone.description}
             `;
 
-            bot.sendPhoto(chatId, phone.image, {
+            const imagePath = path.join(__dirname, phone.image);
+
+            bot.sendPhoto(chatId, imagePath, {
                 caption: caption,
                 parse_mode: 'Markdown',
                 ...keyboards.iphoneKeyboard(phone.id)
+            }).catch(err => {
+                console.log(`❌ ${phone.name}:`, err.message);
+                bot.sendMessage(chatId, caption, {
+                    parse_mode: 'Markdown',
+                    ...keyboards.iphoneKeyboard(phone.id)
+                });
             });
-        }, index * 500);
+        }, index * 2000);
     });
 }
 
@@ -124,16 +141,25 @@ function showCheapIphones(chatId) {
 ${phone.emoji} **${phone.name}** (${phone.year})
 
 💰 **Narxi:** ${phone.price.toLocaleString()} so'm
+💾 **Xotira:** ${phone.storage}
 
 ✨ ${phone.description}
             `;
 
-            bot.sendPhoto(chatId, phone.image, {
+            const imagePath = path.join(__dirname, phone.image);
+
+            bot.sendPhoto(chatId, imagePath, {
                 caption: caption,
                 parse_mode: 'Markdown',
                 ...keyboards.iphoneKeyboard(phone.id)
+            }).catch(err => {
+                console.log(`❌ ${phone.name}:`, err.message);
+                bot.sendMessage(chatId, caption, {
+                    parse_mode: 'Markdown',
+                    ...keyboards.iphoneKeyboard(phone.id)
+                });
             });
-        }, index * 500);
+        }, index * 2000);
     });
 }
 
@@ -207,12 +233,8 @@ Yoki menejerga yozing: @manager_username
 📱 **${phone.name}**
 
 📅 **Yil:** ${phone.year}
-🎨 **Rang:** ${phone.color}
 💾 **Xotira:** ${phone.storage}
-📺 **Ekran:** ${phone.display}
 📸 **Kamera:** ${phone.camera}
-🔋 **Batareya:** ${phone.battery}
-⚙️ **Chip:** ${phone.chip}
 
 💰 **Narxi:** ${phone.price.toLocaleString()} so'm
 
